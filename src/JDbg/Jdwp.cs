@@ -61,6 +61,8 @@ namespace JDbg
             }
         }
 
+        private bool processingWaitingOperationsOnDisconnect;
+
         private void OnDisconnect(/*OPTIONAL*/ SocketException socketException)
         {
             // This handles disconnects if, for example, the app exits
@@ -68,7 +70,10 @@ namespace JDbg
             // If we have any waiting operations, we want to abort them
             lock (_waitingOperations)
             {
-                foreach (var operation in _waitingOperations)
+                Dictionary<uint, WaitingOperationDescriptor> waitingOperations = new Dictionary<uint, WaitingOperationDescriptor>(_waitingOperations);
+                processingWaitingOperationsOnDisconnect = true;
+
+                foreach (var operation in waitingOperations)
                 {
                     if (socketException == null)
                     {
@@ -79,7 +84,9 @@ namespace JDbg
                         operation.Value.OnSocketError(socketException);
                     }
                 }
+
                 _waitingOperations.Clear();
+                processingWaitingOperationsOnDisconnect = false;
             }
 
             // Otherwise just drop the connection
@@ -111,7 +118,10 @@ namespace JDbg
             }
             else
             {
-                Debug.Fail("How did we get a reply packet that we don't have a waiting operation for?");
+                if (!processingWaitingOperationsOnDisconnect)
+                {
+                    Debug.Fail("How did we get a reply packet that we don't have a waiting operation for?");
+                }
             }
         }
 
@@ -132,7 +142,10 @@ namespace JDbg
 
             lock (_waitingOperations)
             {
-                _waitingOperations.Add(command.PacketId, waitingOperation);
+                if (processingWaitingOperationsOnDisconnect)
+                {
+                    _waitingOperations.Add(command.PacketId, waitingOperation);
+                }
             }
 
             SendToTransport(command);
