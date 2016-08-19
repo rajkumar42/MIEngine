@@ -126,7 +126,7 @@ namespace Microsoft.SSHDebugPS
             if (shell == null)
                 return false;
 
-            return (ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager)) as IVsConnectionManager) != null;
+            return ((IVsConnectionManager)ServiceProvider.GlobalProvider.GetService(typeof(IVsConnectionManager))) != null;
         }
     }
 }
