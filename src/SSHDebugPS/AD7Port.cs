@@ -115,7 +115,7 @@ namespace Microsoft.SSHDebugPS
 
         void IDebugUnixShellPort.ExecuteSyncCommand(string commandDescription, string commandText, out string commandOutput, int timeout, out int exitCode)
         {
-            throw new NotImplementedException();
+            exitCode = GetConnection(ConnectionReason.Deferred).ExecuteCommand(commandText, timeout, out commandOutput);
         }
 
         void IDebugUnixShellPort.BeginExecuteAsyncCommand(string commandText, IDebugUnixShellCommandCallback callback, out IDebugUnixShellAsyncCommand asyncCommand)

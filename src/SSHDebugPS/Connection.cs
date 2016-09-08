@@ -47,5 +47,12 @@ namespace Microsoft.SSHDebugPS
             command.Start(commandText);
             asyncCommand = command;
         }
+
+        internal int ExecuteCommand(string commandText, int timeout, out string commandOutput)
+        {
+            var command = _remoteSystem.Shell.ExecuteCommand(commandText, timeout);
+            commandOutput = command.Output;
+            return command.ExitCode;
+        }
     }
 }
