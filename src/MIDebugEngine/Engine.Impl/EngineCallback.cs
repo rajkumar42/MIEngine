@@ -29,8 +29,20 @@ namespace Microsoft.MIDebugEngine
             uint attributes;
             Guid riidEvent = new Guid(iidEvent);
 
+            bool stoppingEvent = eventObject is AD7StoppingEvent;
+            if (stoppingEvent)
+            {
+                _engine.StoppingEventProcessor.LastEventThread = thread;
+                _engine.StoppingEventProcessor.BeforeSendingStoppingEvent();
+            }
+
             EngineUtils.RequireOk(eventObject.GetAttributes(out attributes));
             EngineUtils.RequireOk(_eventCallback.Event(_engine, null, program, thread, eventObject, ref riidEvent, attributes));
+
+            if (stoppingEvent)
+            {
+                _engine.StoppingEventProcessor.AfterSendingStoppingEvent(riidEvent);
+            }
         }
 
         public void Send(IDebugEvent2 eventObject, string iidEvent, IDebugThread2 thread)
@@ -292,6 +304,17 @@ namespace Microsoft.MIDebugEngine
         {
             var eventObject = new AD7StopCompleteEvent();
             Send(eventObject, AD7StopCompleteEvent.IID, (AD7Thread)thread.Client);
+        }
+
+        public void OnAsyncContinue()
+        {
+            _engine.StoppingEventProcessor.ClearStoppingEventState();
+        }
+
+        public void OnStopComplete(IDebugThread2 thread)
+        {
+            var eventObject = new AD7StopCompleteEvent();
+            Send(eventObject, AD7StopCompleteEvent.IID, (AD7Thread)thread);
         }
 
         private void SendMessage(string message, OutputMessage.Severity severity, bool isAsync)

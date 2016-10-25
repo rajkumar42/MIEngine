@@ -128,6 +128,7 @@
     <Compile Include="AD7.Impl\AD7Property.cs" />
     <Compile Include="AD7.Impl\AD7RegProperty.cs" />
     <Compile Include="AD7.Impl\AD7StackFrame.cs" />
+    <Compile Include="AD7.Impl\AD7StoppingEventProcessor.cs" />
     <Compile Include="AD7.Impl\AD7Thread.cs" />
     <Compile Include="AD7.Impl\EngineConstants.cs" />
     <Compile Include="AD7.Impl\HashAlgorithmId.cs" />

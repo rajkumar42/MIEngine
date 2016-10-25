@@ -17,7 +17,7 @@ using Microsoft.DebugEngineHost;
 using Logger = MICore.Logger;
 
 namespace Microsoft.MIDebugEngine
-{
+{ 
     // AD7Engine is the primary entrypoint object for the sample engine.
     //
     // It implements:
@@ -60,6 +60,8 @@ namespace Microsoft.MIDebugEngine
         public Logger Logger { private set; get; }
 
         private IDebugSettingsCallback110 _settingsCallback;
+
+        private AD7StoppingEventProcessor _stoppingEventProcessor;
 
         private static List<int> s_childProcessLaunch;
 
@@ -141,6 +143,14 @@ namespace Microsoft.MIDebugEngine
             return _configStore.GetEngineMetric(metric);
         }
 
+        internal AD7StoppingEventProcessor StoppingEventProcessor
+        {
+            get
+            {
+                return _stoppingEventProcessor;
+            }
+        }
+
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program.
@@ -179,9 +189,11 @@ namespace Microsoft.MIDebugEngine
                     EngineUtils.RequireOk(process.GetPort(out port));
 
                     Debug.Assert(_engineCallback == null);
+                    Debug.Assert(_stoppingEventProcessor == null);
                     Debug.Assert(_debuggedProcess == null);
 
                     _engineCallback = new EngineCallback(this, ad7Callback);
+                    _stoppingEventProcessor = new AD7StoppingEventProcessor(this, _engineCallback);
                     LaunchOptions launchOptions = CreateAttachLaunchOptions(processId.dwProcessId, port);
                     StartDebugging(launchOptions);
                 }
@@ -333,6 +345,7 @@ namespace Microsoft.MIDebugEngine
             DebuggedProcess debuggedProcess = _debuggedProcess;
 
             _engineCallback = null;
+            _stoppingEventProcessor = null;
             _debuggedProcess = null;
             _pollThread = null;
             _ad7ProgramId = Guid.Empty;
@@ -475,6 +488,7 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(_pollThread != null);
             Debug.Assert(_engineCallback != null);
+            Debug.Assert(_stoppingEventProcessor != null);
             Debug.Assert(_debuggedProcess != null);
 
             AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
@@ -499,6 +513,7 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(_pollThread == null);
             Debug.Assert(_engineCallback == null);
+            Debug.Assert(_stoppingEventProcessor == null);
             Debug.Assert(_debuggedProcess == null);
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
@@ -508,6 +523,7 @@ namespace Microsoft.MIDebugEngine
             process = null;
 
             _engineCallback = new EngineCallback(this, ad7Callback);
+            _stoppingEventProcessor = new AD7StoppingEventProcessor(this, _engineCallback);
 
             Exception exception;
 
@@ -539,6 +555,7 @@ namespace Microsoft.MIDebugEngine
         private void StartDebugging(LaunchOptions launchOptions)
         {
             Debug.Assert(_engineCallback != null);
+            Debug.Assert(_stoppingEventProcessor != null);
             Debug.Assert(_pollThread == null);
             Debug.Assert(_debuggedProcess == null);
 
@@ -606,6 +623,7 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(_pollThread != null);
             Debug.Assert(_engineCallback != null);
+            Debug.Assert(_stoppingEventProcessor != null);
             Debug.Assert(_debuggedProcess != null);
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
@@ -656,6 +674,7 @@ namespace Microsoft.MIDebugEngine
         {
             Debug.Assert(_pollThread != null);
             Debug.Assert(_engineCallback != null);
+            Debug.Assert(_stoppingEventProcessor != null);
             Debug.Assert(_debuggedProcess != null);
 
             AD_PROCESS_ID processId = EngineUtils.GetProcessId(process);
@@ -1004,9 +1023,12 @@ namespace Microsoft.MIDebugEngine
         {
             DebuggedProcess.WorkerThread.RunOperation(async () =>
             {
-                await _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Stop);
+                if (_stoppingEventProcessor.BeforeAsyncStop())
+                {
+                    await _debuggedProcess.CmdBreak(MICore.Debugger.BreakRequest.Stop);
+                }
             });
-            return _debuggedProcess.ProcessState == ProcessState.Running ? Constants.S_ASYNC_STOP : Constants.S_OK;
+            return Constants.S_ASYNC_STOP;
         }
 
         // WatchForExpressionEvaluationOnThread is used to cooperate between two different engines debugging

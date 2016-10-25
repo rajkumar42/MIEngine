@@ -195,7 +195,15 @@ namespace Microsoft.MIDebugPackage
                 executable = Path.GetFullPath(executable);
             }
 
-            LaunchDebugTarget(executable, options);
+            // HACK HACK HACK 
+            // Attempting to launch multiple process by reading the XML file. 
+            // 1st line is the xml header. each line from the second line is a process to launch. 
+            string[] optionLines = options.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            for (int i = 1; i < optionLines.Length; i++)
+            {
+                string newOption = optionLines[0] + Environment.NewLine + optionLines[i];
+                LaunchDebugTarget(executable, newOption);
+            }                       
 
             return 0;
         }
