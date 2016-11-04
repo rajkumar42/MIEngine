@@ -99,7 +99,7 @@ function IsProjectJsonSupported() {
 # 'latest' version may be updated
 # all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
 if ($Version -eq "latest") {
-    $VersionNumber = "14.0.25520-preview-3139256"
+    $VersionNumber = "15.0.25626-preview-3219185"
 } elseif ($Version -eq "vs2015u2") {
     $VersionNumber = "14.0.25520-preview-3139256" # This version is now locked and should not be updated
 }

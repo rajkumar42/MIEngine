@@ -103,7 +103,7 @@ fi
 version_string="$(echo $1 | awk '{print tolower($0)}')"
 case $version_string in
     latest)
-        __ClrDbgVersion=14.0.25520-preview-3139256
+        __ClrDbgVersion=15.0.25626-preview-3219185
         ;;
     vs2015u2)
         __ClrDbgVersion=14.0.25520-preview-3139256 #This version is now locked and should not be updated.
