@@ -90,6 +90,7 @@ function GenerateNuGetConfig() {
 }
 
 function IsProjectJsonSupported() {
+    return $false
     # Last preview2 release version is 3133 and starting preview3 only csproj files were supported.
     $dotnetVersion = dotnet --version
     return (($dotnetVersion.Split("-")[2] -as [int]) -le 3133)
@@ -99,7 +100,7 @@ function IsProjectJsonSupported() {
 # 'latest' version may be updated
 # all other version constants i.e. 'vs2015u2' may not be updated after they are finalized
 if ($Version -eq "latest") {
-    $VersionNumber = "15.0.25626-preview-3219185"
+    $VersionNumber = "15.0.25904-preview-3404276"
 } elseif ($Version -eq "vs2015u2") {
     $VersionNumber = "14.0.25520-preview-3139256" # This version is now locked and should not be updated
 }
